@@ -25,9 +25,53 @@ namespace aws_s3_digitalocean_spaces_basic
             _S3Client = new AmazonS3Client(AccessKeyId, SecretAccessKey, _S3Config);
         }
 
-        public Task<bool> DeleteFileAsync(string fileName, string versionId = "")
+        public async Task<bool> DeleteFileAsync(string fileName, string versionId = "")
         {
-            throw new NotImplementedException();
+            DeleteObjectRequest request = new DeleteObjectRequest
+            {
+                BucketName = _bucketName,
+                Key = fileName
+            };
+
+            if (!string.IsNullOrEmpty(versionId))
+                request.VersionId = versionId;
+
+            if (!IsFileExists(fileName,versionId))
+            {
+                return false;
+            }
+            await _S3Client.DeleteObjectAsync(request);
+            return true;
+        }
+
+        public bool IsFileExists(string fileName, string versionId)
+        {
+            try
+            {
+                GetObjectMetadataRequest request = new GetObjectMetadataRequest()
+                {
+                    BucketName = _bucketName,
+                    Key = fileName,
+                    VersionId = !string.IsNullOrEmpty(versionId) ? versionId : null
+                };
+
+                var response = _S3Client.GetObjectMetadataAsync(request).Result;
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                if (ex.InnerException != null && ex.InnerException is AmazonS3Exception awsEx)
+                {
+                    if (string.Equals(awsEx.ErrorCode, "NoSuchBucket"))
+                        return false;
+
+                    else if (string.Equals(awsEx.ErrorCode, "NotFound"))
+                        return false;
+                }
+
+                throw;
+            }
         }
 
         public async Task<byte[]> DownloadFileAsync(string file)

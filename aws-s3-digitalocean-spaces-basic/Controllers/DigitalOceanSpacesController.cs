@@ -66,5 +66,32 @@ namespace aws_s3_digitalocean_spaces_basic.Controllers
             }
         }
 
+        [HttpDelete("{documentName}")]
+        public IActionResult DeletetDocumentFromS3(string documentName)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(documentName))
+                    return BadRequest("The 'documentName' parameter is required");
+                    //return ReturnMessage("The 'documentName' parameter is required", (int)HttpStatusCode.BadRequest);
+
+                _aws3Services = new Aws3Services(_appConfiguration.AccessKey, _appConfiguration.SecretAccessKey, _appConfiguration.SessionToken, _appConfiguration.Region, _appConfiguration.BucketName);
+
+                var result = _aws3Services.DeleteFileAsync(documentName).Result;
+                if (!result)
+                {
+                    return NotFound();
+                }
+
+                return Ok(string.Format("The document '{0}' is deleted successfully", documentName));
+                //return ReturnMessage(string.Format("The document '{0}' is deleted successfully", documentName));
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Ocurrio un error:", ex);
+                return null;
+            }
+        }
+
     }
 }
