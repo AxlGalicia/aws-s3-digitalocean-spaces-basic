@@ -1,5 +1,8 @@
-﻿using aws_s3_digitalocean_spaces_basic.Interfaces;
+﻿using Amazon.Runtime.Internal.Util;
+using aws_s3_digitalocean_spaces_basic.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using ILogger = Microsoft.Extensions.Logging.ILogger;
+
 using System.Net;
 
 namespace aws_s3_digitalocean_spaces_basic.Controllers
@@ -9,16 +12,21 @@ namespace aws_s3_digitalocean_spaces_basic.Controllers
     public class DigitalOceanSpacesController : ControllerBase
     {
         private readonly IAppConfiguration _appConfiguration;
+        private readonly ILogger<DigitalOceanSpacesController> _logger;
         private IAws3Services _aws3Services;
 
-        public DigitalOceanSpacesController(IAppConfiguration appConfiguration)
+        public DigitalOceanSpacesController(IAppConfiguration appConfiguration,
+                                            ILogger<DigitalOceanSpacesController> logger)
         {
             _appConfiguration = appConfiguration;
+            _logger = logger;
         }
 
         [HttpGet("{documentName}")]
         public IActionResult GetDocumentFromS3(string documentName)
         {
+            _logger.LogInformation("Http GET from DigitalOceanSpacesController [GetDocumentFromS3]");
+
             try
             {
                 if (string.IsNullOrEmpty(documentName))
@@ -46,6 +54,8 @@ namespace aws_s3_digitalocean_spaces_basic.Controllers
         [HttpPost]
         public IActionResult UploadDocumentToS3(IFormFile file)
         {
+            _logger.LogInformation("Http POST from DigitalOceanSpacesController [UploadDocumentToS3]");
+
             try
             {
                 if (file is null || file.Length <= 0)
@@ -67,8 +77,10 @@ namespace aws_s3_digitalocean_spaces_basic.Controllers
         }
 
         [HttpDelete("{documentName}")]
-        public IActionResult DeletetDocumentFromS3(string documentName)
+        public IActionResult DeleteDocumentFromS3(string documentName)
         {
+            _logger.LogInformation("Http DELETE from DigitalOceanSpacesController [DeleteDocumentFromS3]");
+
             try
             {
                 if (string.IsNullOrEmpty(documentName))
